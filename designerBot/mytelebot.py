@@ -1,43 +1,31 @@
 import telebot
+import pyfiglet
+import time
+from rich.console import Console
 from telebot import types
 import botconfig
 
+con=Console()
+banner = pyfiglet.figlet_format("designer bot ",font="banner3-D")
 bot = telebot.TeleBot(botconfig.TOKKEN)
-print(botconfig.TOKKEN)
+con.print(banner)
+print("bot tokken:" + botconfig.TOKKEN)
+
 print("Пока всё работает\nПока...")
 
 #обработчик тестовых приколов
 @bot.message_handler(commands=['devtest'])
 def dev_test(message):
 	try:
-		bot.send_message(message.from_user.id, "1:next step handler\n2menu features\n3register")
-		loop_switch = 0
-		while loop_switch == 0:
-			if message.text == "1" or message.text == "2" or message.text == "3":
-				loop_switch = 1
-				bot.register_next_step_handler(message,devtest_first)
-			else:
-				bot.send_message(message.from_user.id, "Неправильная комманда")
+		bot.send_message(message.from_user.id, "Введите ориентаию дисплея, номер категорию и количество обоев.\nПример: Горизонтальная Аниме 5")
+		bot.send_message(message.from_user.id, "Категории:\n1:Аниме\n2:Автомобили\n3:Ещё какая нибудь хуйня")
+		bot.register_next_step_handler(message,sendWallpaper)
 	except Exception:
 		print ("Ты всё сломал нахер,придурок")
 
-def devtest_first(message):
-	try:	
-		if message.text == "1":
-			bot.send_message(message.from_user.id, "напиши что-нибудь")
-			bot.register_next_step_handler(message,devtest_second)
-		if message.text == "2":
-			bot.send_message(message.from_user.id, "пока нихера не сделал")
-		if message.text == "3":
-			bot.send_message(message.from_user.id, "пока нихера не сделал")
-	except Exception:
-		print ("Ты всё сломал нахер,придурок")
-
-def devtest_second(message):
-	try:
-		bot.send_message(message.from_user.id, "Ты написал " + message.text)
-	except Exception:
-		print ("Ты всё сломал нахер,придурок")
+def sendWallpaper(message):
+		bot.send_message(message.from_user.id, str(message.from_user.id) + ":" + str(message.text))
+		print(str(message.from_user.id) + ":" + str(message.text))
 
 #кнопка старт
 @bot.message_handler(commands=['start'])
