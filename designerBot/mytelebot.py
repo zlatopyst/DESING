@@ -1,6 +1,7 @@
 import telebot
 import pyfiglet
 import time
+import pymysql
 from rich.console import Console
 from telebot import types
 import botconfig
@@ -12,6 +13,17 @@ category_list = {
 '4':'видеоигры',
 '5':'сериалы'}
 
+def setupdb():
+	mysql.connect(
+		host = botconfig.HOST,
+		port = 3306,
+		user = botconfig.LOGIN,
+		password = botconfig.PASSWORD,
+		database = botconfig.DB_NAME)
+
+
+#setupdb()
+
 def getCategory():
 	categ_str = "Доступные категории:\n"
 	for i in range(len(category_list)):
@@ -19,11 +31,35 @@ def getCategory():
 	return categ_str
 
 
+def geturls(amt,category):
+	request = str("select wpurls from Wallpaper where category like \"" + category + "\" limit " + amt)
+	print(request)
+	
+	with dbconnect.cursor() as cursor:
+		cursor.execute(request)
+		#print(cursor.fetchall())
+		return cursor.fetchall()
+
+
+try:
+	dbconnect = pymysql.connect(
+		host = botconfig.HOST,
+		port = 3306,
+		user = botconfig.LOGIN,
+		password = botconfig.PASSWORD,
+		database = botconfig.DB_NAME)
+	print("законектилось")
+except:
+	print("Не законектилось")
+
+
 con=Console()
 banner = pyfiglet.figlet_format("designer bot ",font="banner3-D")
 bot = telebot.TeleBot(botconfig.TOKKEN)
 con.print(banner)
 print("bot tokken:" + botconfig.TOKKEN)
+print("host:" + botconfig.HOST)
+print("dbname:" + botconfig.DB_NAME)
 
 print("Пока всё работает\nПока...")
 
@@ -50,13 +86,18 @@ def wallHandler(message):
 	orientAllias = ['горизонтальная','вертикальная']
 	query = message.text.split(" ")
 
-	try:
-		if (len(query) != 3 or orientAllias.count(query[1]) == 0 or int(query[0]) > 5 or int(query[2]) > 10):
-			bot.send_message(message.from_user.id, "Неверный формат")
-		else:
-			bot.send_message(message.from_user.id,"Категория:" + str(category_list[str(query[0])]) + "\nОриентация:" + query[1] + "\nКоличество:" + query[2])
-	except Exception:
+	if (len(query) != 3 or orientAllias.count(query[1]) == 0 or int(query[0]) > 5 or int(query[2]) > 10):
 		bot.send_message(message.from_user.id, "Неверный формат")
+	else:
+		#bot.send_message(message.from_user.id,"Категория:" + str(category_list[str(query[0])]) + "\nОриентация:" + query[1] + "\nКоличество:" + query[2])
+		sqlwallpaper(message, geturls(query[2], str(category_list[str(query[0])])))
+		
+
+def sqlwallpaper(message, query):
+	print(query)
+	bot.send_message(message.from_user.id, query)
+
+
 
 #кнопка старт
 @bot.message_handler(commands=['start'])
